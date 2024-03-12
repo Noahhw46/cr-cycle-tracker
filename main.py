@@ -1,8 +1,7 @@
 import cv2
-import numpy as np
 from utils.loadtemplates import load_templates
-from utils.init_functions import init_video, init_rects
-from handlogic import update_hand, init_hand
+from utils.init_functions import init_video, init_rects, init_hands_and_decks
+from handlogic import update_hand
 from utils.printing import color_print
 from frame_processing.user_interaction import process_key_press
 from drawhands import show_hand, draw_rects_and_update_current_decks
@@ -16,13 +15,13 @@ def post_process_decks(match_frequency, current_deck, true_deck, prev_deck, prev
         if true_deck[rect] != "questionmark":
             if prev_deck[rect] not in prev_cards.keys():
                 if card == "uncertain" and prev_deck[rect] != "uncertain":
-                    color_print(color, f"{color} Player played: {card} at frame {frame_count}")
+                    color_print(color, f"{color} Player played: {prev_deck[rect]} at frame {frame_count}")
                     prev_cards[prev_deck[rect]] = frame_count
                     hand = update_hand(hand, prev_deck[rect])
 
             elif frame_count - prev_cards[prev_deck[rect]] > match_frequency*5:
                 if card == "uncertain" and prev_deck[rect] != "uncertain":
-                    color_print(color, f"{color} Player played: {card} at frame {frame_count}")
+                    color_print(color, f"{color} Player played: {prev_deck[rect]} at frame {frame_count}")
                     prev_cards[prev_deck[rect]] = frame_count
                     hand = update_hand(hand, prev_deck[rect])
 
@@ -55,7 +54,7 @@ def main():
     templates = load_templates()
     game_file = input("Enter the path to the game file: ")
     cap = init_video(game_file)
-    # Initialize rectangles with frame dimensions
+
     red_rects, blue_rects = init_rects()
     red_cache = {}
     blue_cache = {}
@@ -74,19 +73,7 @@ def main():
         current_blue_deck = draw_rects_and_update_current_decks(current_blue_deck, blue_rects, frame, templates, blue_cache, matched_blue_cards)
 
         if frame_count == match_frequency:
-            #On the first frame, we need to initialize the previous decks and hands
-            prev_red_deck = current_red_deck.copy()
-            prev_blue_deck = current_blue_deck.copy()
-            
-            true_red_deck = current_red_deck.copy()
-            true_blue_deck = current_blue_deck.copy()
-
-            print(f"True red deck: {true_red_deck} as of frame {frame_count}")
-            print(f"True blue deck: {true_blue_deck} as of frame {frame_count}")
-            print("\n\n")
-            
-            red_hand = init_hand()
-            blue_hand = init_hand()
+            prev_red_deck, prev_blue_deck, true_red_deck, true_blue_deck, red_hand, blue_hand = init_hands_and_decks(current_red_deck, current_blue_deck, frame_count)
 
 
         prev_red_deck, red_prev_cards, red_hand = post_process_decks(match_frequency, current_red_deck, true_red_deck, prev_red_deck, red_prev_cards, frame_count, "red", red_hand)

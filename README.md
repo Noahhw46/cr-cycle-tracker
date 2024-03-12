@@ -7,13 +7,12 @@ This project is a Python application that processes live Clash Royale game foota
 
 - `debug/`: Contains various scripts for debugging and testing - most of these I used for building it and probably don't need to be used if you're just going to run the main script, but I figured I'd include them in case anybody has issues with getting it to work on their machine (sorry for the unhelpful names).
 - `locations/`: Contains JSON files with coordinates for various game elements.
-- `main.py`: The main script that runs the application.
 - `templates/`: Contains screenshots of card images as they show up in the game client.
 - `utils/`: Contains utility scripts for loading templates, initializing functions, and printing.
 - `frame_processing/`: Contains the logic for template matching and processing key presses on each frame.
 - `handlogic.py`: Contains the logic for handling game hands.
 - `drawhands.py`: Contains the functions for figuring out and drawing the decks to the screen.
-
+- `main.py`: The main script that runs the application.
 ## Main Features
 
 The `main.py` script processes video game footage and tracks game data. It is currently set to display three windows, 1 with the game footage, 1 with the red players deck, and 1 with the blue players. It uses template matching to figure out when a card has been played and keeps track of the cards that have been played for each player in order to keep track of their cycle.
