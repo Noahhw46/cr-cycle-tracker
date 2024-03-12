@@ -1,38 +1,9 @@
 import cv2
 from utils.loadtemplates import load_templates
 from utils.init_functions import init_video, init_rects, init_hands_and_decks
-from handlogic import update_hand
-from utils.printing import color_print
 from frame_processing.user_interaction import process_key_press
+from frame_processing.templatematching import post_process_decks
 from drawhands import show_hand, draw_rects_and_update_current_decks
-
-def post_process_decks(match_frequency, current_deck, true_deck, prev_deck, prev_cards, frame_count, color, hand):
-    #If the new card is a question mark and the previous card wasn't then we know that that card was played 
-    #However, we need to check if it was played before, as sometimes there is an issue where the matching function
-    #will on one frame detect a question mark (ie the card was played) and then on the next frame detect that same card and then on the *next*
-    #frame detect a different card. This is a problem because it will look like the card was played twice.
-    for rect, card in current_deck.items():
-        if true_deck[rect] != "questionmark":
-            if prev_deck[rect] not in prev_cards.keys():
-                if card == "uncertain" and prev_deck[rect] != "uncertain":
-                    color_print(color, f"{color} Player played: {prev_deck[rect]} at frame {frame_count}")
-                    prev_cards[prev_deck[rect]] = frame_count
-                    hand = update_hand(hand, prev_deck[rect])
-
-            elif frame_count - prev_cards[prev_deck[rect]] > match_frequency*5:
-                if card == "uncertain" and prev_deck[rect] != "uncertain":
-                    color_print(color, f"{color} Player played: {prev_deck[rect]} at frame {frame_count}")
-                    prev_cards[prev_deck[rect]] = frame_count
-                    hand = update_hand(hand, prev_deck[rect])
-
-        elif card != "uncertain" and card != "questionmark" and true_deck[rect] == "questionmark":
-                color_print(color, f"{color} Player played: {card} at frame {frame_count}")
-                prev_cards[card] = frame_count
-                true_deck[rect] = card
-                hand = update_hand(hand, card)
-
-
-    return prev_deck, prev_cards, hand
 
 def main():
     true_red_deck = {}
@@ -86,7 +57,7 @@ def main():
         prev_red_deck = current_red_deck.copy()
         prev_blue_deck = current_blue_deck.copy()
 
-        cv2.imshow('Matched Frame', frame)
+        cv2.imshow('Game', frame)
 
         key = cv2.waitKey(1)
 

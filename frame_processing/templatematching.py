@@ -1,8 +1,23 @@
 import cv2
 from utils.white_pixel_filter import has_problematic_colors
-
+from handlogic import update_hand
+from utils.printing import color_print
 
 def find_best_match(frame, rect, templates, cache, matched_cards, threshold=0.7):
+    """
+    Finds the best match for a given region of interest (ROI) in a frame using template matching.
+
+    Parameters:
+    frame (np.array): The frame in which to find the match.
+    rect (tuple): A tuple (x1, y1, x2, y2) defining the ROI.
+    templates (dict): A dictionary of templates to match against. The keys are template names and the values are the templates themselves.
+    cache (dict): A cache of previous matches. The keys are rectangles and the values are the names of the templates that matched.
+    matched_cards (list): A list of cards that have already been matched for a given player.
+    threshold (float, optional): The threshold for a match. Defaults to 0.7.
+
+    Returns:
+    str: The name of the best matching template if a match is found, "uncertain" otherwise.
+    """
     # Check the cache first
     roi = frame[rect[1]:rect[3], rect[0]:rect[2]]
     
@@ -27,7 +42,7 @@ def find_best_match(frame, rect, templates, cache, matched_cards, threshold=0.7)
     best_match_name = None
     
     for template_name, template in templates.items():
-        if template_name in matched_cards:  
+        if template_name in matched_cards:  #We don't need to check templates that have already been matched for a given player
             continue
         gray_template = template if len(template.shape) == 2 else cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 
@@ -43,3 +58,42 @@ def find_best_match(frame, rect, templates, cache, matched_cards, threshold=0.7)
         cache[rect] = best_match_name
 
     return best_match_name if best_match_score > threshold else "uncertain"
+
+
+
+def post_process_decks(match_frequency, current_deck, true_deck, prev_deck, prev_cards, frame_count, color, hand):
+    """
+    This is the main logic for processing the cards played by the players. It is called every match_frequency frames and recieves all the information that
+    the main matching function gives.
+    The basic problem that it solves is that when a card is played, there are a few frames where there is high variation in how the card is detected.
+    Ie frame 1 it might not find a match then frame 2 it will, etc. But all we are interested in is the first frame where we don't find a match.
+
+    The basic logic is as follows:
+    1. If the new card is a question mark (ie the match finding function was uncertain) and the previous card wasn't then we know that that card was played
+    2. If the new card is not a questionmark and the previous card was then we know that that was a new card that was played.
+
+    It returns the updated previous deck, previous cards and hand.
+    """
+
+    for rect, card in current_deck.items():
+        if true_deck[rect] != "questionmark":
+            if prev_deck[rect] not in prev_cards.keys():
+                if card == "uncertain" and prev_deck[rect] != "uncertain":
+                    color_print(color, f"{color} Player played: {prev_deck[rect]} at frame {frame_count}")
+                    prev_cards[prev_deck[rect]] = frame_count
+                    hand = update_hand(hand, prev_deck[rect])
+
+            elif frame_count - prev_cards[prev_deck[rect]] > match_frequency*5:
+                if card == "uncertain" and prev_deck[rect] != "uncertain":
+                    color_print(color, f"{color} Player played: {prev_deck[rect]} at frame {frame_count}")
+                    prev_cards[prev_deck[rect]] = frame_count
+                    hand = update_hand(hand, prev_deck[rect])
+
+        elif card != "uncertain" and card != "questionmark" and true_deck[rect] == "questionmark":
+                color_print(color, f"{color} Player played: {card} at frame {frame_count}")
+                prev_cards[card] = frame_count
+                true_deck[rect] = card
+                hand = update_hand(hand, card)
+
+
+    return prev_deck, prev_cards, hand
