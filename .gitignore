@@ -1,0 +1,4 @@
+frames/
+__pycache__/
+games/
+.DS_Store
