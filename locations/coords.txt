@@ -1,0 +1,44 @@
+battlebar_red:
+    topleft:
+        x: 8
+        y: 141
+    topright:
+        x: 1169
+        y: 141
+    bottomleft:
+        x: 8
+        y: 471
+    bottomright:
+        x: 1171
+        y: 471
+
+battlebar_blue:
+    topleft:
+        x: 8
+        y: 2205
+    topright:
+        x: 1169
+        y: 2210
+    bottomleft:
+        x: 8
+        y: 2504
+    bottomright:
+        x: 1171
+        y: 2504
+
+
+playername_red:
+    topleft:
+        x: 9
+        y: 484
+    bottomright:
+        x: 687
+        y: 610
+
+playername_blue:
+    topleft:
+        x: 8
+        y: 2075
+    bottomright:
+        x: 700
+        y: 2179
